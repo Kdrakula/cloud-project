@@ -1,40 +1,32 @@
-# Cloud Native Web App ☁️
+A simple Python (Flask) application that counts visits, connected to a Redis database. The project is fully dockerized and ready for Kubernetes deployment.
 
-Prosta aplikacja w Pythonie (Flask) zliczająca odwiedziny, podłączona do bazy Redis. Projekt przygotowywany pod wdrożenie w Kubernetes.
+## Requirements
+- macOS (Apple Silicon)
+- OrbStack (or Docker Desktop)
+- Docker Compose
 
-## 🛠 Wymagania
-- macOS (M-series / Apple Silicon)
-- OrbStack (lub Docker Desktop)
-- Python 3
+## Quick Start (Docker Compose)
 
-## 🚀 Jak uruchomić projekt lokalnie (Model Hybrydowy)
+The entire application stack (web server and database) is orchestrated using Docker Compose. You no longer need a local Python environment to run it.
 
-### Krok 1: Aktywacja środowiska Python
-Zawsze zaczynaj od wejścia do folderu i aktywacji izolowanego środowiska:
-\`\`\`bash
-cd ~/cloud-project
-source venv/bin/activate
-\`\`\`
+### 1. Start the stack
+Run the following command in the root directory of the project to start all services in the background:
+```bash
+docker compose up -d
+```
+### 2. Access the application
+Open your web browser and navigate to:
+http://localhost:5000
 
-### Krok 2: Uruchomienie bazy danych (Redis) w Dockerze
-Jeśli kontener jeszcze nie istnieje, stwórz go i uruchom:
-\`\`\`bash
-docker run -d -p 6379:6379 --name moj-redis redis
-\`\`\`
-*(Jeśli kontener już istnieje, ale jest wyłączony, użyj: `docker start moj-redis`)*
+### 3. Stop the stack
+To stop the application and remove the containers, run:
 
-### Krok 3: Uruchomienie aplikacji
-Gdy baza danych działa, uruchom serwer Pythona:
-\`\`\`bash
-python app.py
-\`\`\`
+```bash
+docker compose down
+```
+Useful Commands
+- `docker compose ps` - List all running containers for this project.
 
-### Krok 4: Testowanie
-Otwórz przeglądarkę i wejdź pod adres:
-[http://localhost:5000](http://localhost:5000)
+- `docker compose logs -f` - View live, aggregated logs from both the web app and the database.
 
----
-## 🧹 Przydatne komendy
-- `docker ps` - sprawdza, czy Redis faktycznie działa w tle.
-- `docker stop moj-redis` - zatrzymuje bazę danych.
-- `Ctrl+C` (w terminalu z Pythonem) - zatrzymuje aplikację.
+- `docker compose up -d --build` - Rebuild the web image and restart the containers (use this after modifying app.py).
