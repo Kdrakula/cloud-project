@@ -2,26 +2,28 @@ import os
 import platform
 import time
 
-import redis
 from flask import Flask
+from redis import Redis
+from redis.exceptions import ConnectionError
 
 app = Flask(__name__)
 
-# Konfiguracja: Pobieramy adres Redisa ze zmiennej środowiskowej
-# Jeśli zmienna nie istnieje (np. lokalnie), używamy 'localhost'
+# Configuration: Get Redis address from environment variable
+# Fallback to 'localhost' if not set
 redis_host = os.environ.get("REDIS_HOST", "localhost")
-cache = redis.Redis(host=redis_host, port=6379)
+cache = Redis(host=redis_host, port=6379)
 
 
-# Funkcja próbująca połączyć się z bazą (z mechanizmem ponawiania prób)
+# Function to attempt database connection with retry mechanism
 def get_hit_count():
     retries = 5
     while True:
         try:
             return cache.incr("hits")
-        except redis.exceptions.ConnectionError as exc:
+        # Using the explicitly imported ConnectionError
+        except ConnectionError:
             if retries == 0:
-                return None  # Zwracamy None jeśli baza nie działa
+                return None  # Return None if database is unreachable
             retries -= 1
             time.sleep(0.5)
 
@@ -30,15 +32,15 @@ def get_hit_count():
 def hello():
     count = get_hit_count()
 
-    # Pobieramy nazwę komputera/kontenera
+    # Get the hostname (container ID or machine name)
     host_name = platform.node()
 
     if count is None:
-        return f"Witaj! Host: {host_name}. \nBŁĄD: Nie można połączyć się z Redisem.\n"
+        return f"Hello! Host: {host_name}. \nERROR: Cannot connect to Redis.\n"
 
-    return f"Witaj! Host: {host_name}. \nOdwiedziłeś nas {count} razy.\n"
+    return f"Hello! Host: {host_name}. \nYou have been here {count} times.\n"
 
 
 if __name__ == "__main__":
-    # Uruchamiamy serwer dostępny dla wszystkich (0.0.0.0)
+    # Run the server accessible to everyone (0.0.0.0)
     app.run(host="0.0.0.0", port=8080, debug=True)
