@@ -1,0 +1,19 @@
+services:
+  # Database service
+  redis:
+    image: redis:alpine
+    container_name: my-redis-db
+    ports:
+      - "6379:6379"
+
+  # Python web application service
+  web:
+    build: .
+    container_name: my-python-app
+    ports:
+      - "8080:8080"
+    environment:
+      # Connects to the Redis service using its service name
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
