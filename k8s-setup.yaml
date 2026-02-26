@@ -1,0 +1,75 @@
+# 1. Redis Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:alpine
+        ports:
+        - containerPort: 6379
+
+---
+# 2. Redis Service (Internal DNS)
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis # This exact name becomes the DNS address inside the cluster
+spec:
+  selector:
+    app: redis
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
+
+---
+# 3. Web App Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+spec:
+  replicas: 2 # We want 2 instances of our Python app running simultaneously
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: kdrakula/cloud-app:latest
+        imagePullPolicy: Always
+        env:
+        - name: REDIS_HOST
+          value: "redis" # Connects to the Redis Service defined above
+        ports:
+        - containerPort: 8080
+
+---
+# 4. Web App Service (Expose to your Mac)
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  type: LoadBalancer # Exposes the app outside the cluster (to your localhost)
+  selector:
+    app: web
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
